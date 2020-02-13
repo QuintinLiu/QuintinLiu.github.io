@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Gemini","version":"7.7.1","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":true,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":null,"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="两篇关于变化检测的论文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文阅读|GETNET:a General e2e 2D CNN Framework for Hyperspectral Image Change Detection|Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detectionn">
+<meta property="og:url" content="http://yoursite.com/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-GETNET-a-General-e2e-2D-CNN-Framework-for-Hyperspectral-Image-Change-Detection/index.html">
+<meta property="og:site_name" content="落雪听梅">
+<meta property="og:description" content="两篇关于变化检测的论文">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420180715.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420345462.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420361674.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420379122.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420390016.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420402271.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420412161.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420433303.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420448387.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420498111.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420511061.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420572009.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427409859.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427471184.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427496171.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427519630.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427545900.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427558338.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427609068.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427631018.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427647024.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427704872.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427782231.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570427791917.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570427831773.png">
+<meta property="og:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427848090.png">
+<meta property="article:published_time" content="2020-02-12T15:52:11.000Z">
+<meta property="article:modified_time" content="2020-02-13T03:53:52.469Z">
+<meta property="article:author" content="Quintin Liew">
+<meta property="article:tag" content="变化检测">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420180715.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-GETNET-a-General-e2e-2D-CNN-Framework-for-Hyperspectral-Image-Change-Detection/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>论文阅读|GETNET:a General e2e 2D CNN Framework for Hyperspectral Image Change Detection|Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detectionn | 落雪听梅</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta custom-logo">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">落雪听梅</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Know Thyself</p>
+      <a>
+        <img class="custom-logo-image" src="/images/custom-logo.jpg" alt="落雪听梅">
+      </a>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-GETNET-a-General-e2e-2D-CNN-Framework-for-Hyperspectral-Image-Change-Detection/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="Quintin Liew">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="落雪听梅">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          论文阅读|GETNET:a General e2e 2D CNN Framework for Hyperspectral Image Change Detection|Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detectionn
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-12 23:52:11" itemprop="dateCreated datePublished" datetime="2020-02-12T23:52:11+08:00">2020-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-13 11:53:52" itemprop="dateModified" datetime="2020-02-13T11:53:52+08:00">2020-02-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/paper/" itemprop="url" rel="index">
+                    <span itemprop="name">paper</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-GETNET-a-General-e2e-2D-CNN-Framework-for-Hyperspectral-Image-Change-Detection/" class="post-meta-item leancloud_visitors" data-flag-title="论文阅读|GETNET:a General e2e 2D CNN Framework for Hyperspectral Image Change Detection|Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detectionn" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-GETNET-a-General-e2e-2D-CNN-Framework-for-Hyperspectral-Image-Change-Detection/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-GETNET-a-General-e2e-2D-CNN-Framework-for-Hyperspectral-Image-Change-Detection/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>两篇关于变化检测的论文</p>
+<a id="more"></a>
+<h1 id="getnet-e2e-2d-cnn-hyperspectral-image-cd">GETNET e2e 2d CNN Hyperspectral image CD</h1>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420180715.png" /></p>
+<h2 id="abstract">abstract</h2>
+<p>有两个问题：1.传统算法不适用于高光谱图像的高维数据；2.亚像素级的信息没有被充分利用。因此作者提出了通用的端到端的2维CNN来进行高光谱图像的变化检测。主要贡献：1.引入融合亚像素表示的混合亲和矩阵，挖掘更多的跨通道梯度特征，融合多源信息；2.设计2维CNN在更高的层次有效学习多源数据差异特征，增强了CD算法的泛化能力；3.设计了一个新的HIS-CD数据集进行比较实验</p>
+<h2 id="introduction">introduction</h2>
+<p>完整的CD检测过程：1.图像预处理（应该是获得两张对应的图像，就是获得数据）；2.生成DI；3.评估。</p>
+<p>对于HIS-CD有三个主要问题：1.混合像素问题，就是在该像素区域内有多个物体表面，这个像素表示的是这多个物体表面的平均值，那这样表示就不精确，就限制了HIS-CD的检测；2.高维数据问题，一些CD算法进行特征提取和波段选择来降维，某种程度上会丢失信息；3.有限的数据集问题，HIS-CD数据集较少，且制作耗时费力。</p>
+<p>More Actions作者的动机主要有两个：1.必须解决混合像素的问题，利用光谱分解技术分解出一个像素内的具体成分以及相应的abundance map（一个像素内各成分所占的比例）；2.深度网络可以很好的解决高维数据问题并且能提取有效的特征，但许多运用了深度学习的HIS-CD方法没有充分提取特征，这些方法一般主要分析一维光谱向量的像素变化，而对应同一像素上不同光谱间的特征包含丰富的信息，但都被忽视了</p>
+<h2 id="relation-work">relation work</h2>
+<p>CD最普遍和最简单的方法是图像差值以及图像比值，当处理多光谱图像时，主要有以下四种分类：</p>
+<ol type="1">
+<li>图像的算术操作。对光谱向量作减法；</li>
+<li>图像变换。将多光谱图像转变到特定的特征空间，突出变化像素，抑制无变化像素；</li>
+<li>图像分类。这类方法一般是有监督的，需要先验知识；对一对图片中的像素，或者特征进行比较然后分类，相同或者不同；</li>
+<li>其它先进的方法。主要有基于深度学习的方法；作者关心的是光谱分解方法，光谱分解方法在HSI- CD里面没有广泛的研究，许多关于分解的方法都是个例研究。</li>
+</ol>
+<h2 id="methodology方法论">methodology方法论</h2>
+<p>主要有以下步骤：光谱分解，提取端元（端元应该就是一个像素内所包含的多个物体表面），丰度估计，形成混合亲和矩阵，GETNET网络处理这个矩阵得出结果。</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420345462.png" /></p>
+<h3 id="混合光谱分解用于亚像素级别信息挖掘">混合光谱分解用于亚像素级别信息挖掘</h3>
+<p>一个完整的光谱分解过程包括：端元提取，丰度估计。</p>
+<p>端元提取采用的是ATGP算法；丰度估计采用线性分解以及非线性分解方法对提取到的端元解混</p>
+<p><strong>线性混合模型</strong>，假定每一个像素是端元的线性组合</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420361674.png" /></p>
+<p><span class="math inline">\(r\)</span>：反射系数，<span class="math inline">\(b\times1\)</span>向量 <span class="math inline">\(m\)</span>：端元个数 <span class="math inline">\(\omega_{li}\)</span>：第<span class="math inline">\(i\)</span>个端元的丰度分数，就是占比 <span class="math inline">\(X\)</span>：<span class="math inline">\(b\times m\)</span>的一个矩阵，<span class="math inline">\(b\)</span>个波段，<span class="math inline">\(m\)</span>个端元 <span class="math inline">\(x_i\)</span>：<span class="math inline">\(X\)</span>中的一列 <span class="math inline">\(\epsilon\)</span>：<span class="math inline">\(b\times1\)</span>的噪声向量，传感器和模型误差引起 FCLS算法求出<span class="math inline">\(\omega_l\)</span></p>
+<p><strong>非线性混合模型</strong></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420379122.png" /></p>
+<p><span class="math inline">\(\bigodot\)</span>：是逐点相乘 <span class="math inline">\(a_{ij}\)</span>：<span class="math inline">\(i\)</span>和<span class="math inline">\(j\)</span>之间的非线性参数来表征模型非线性特性 <span class="math inline">\(\omega_{ni}\)</span>：第<span class="math inline">\(i\)</span>个端元的非线性比例 BFM算法求出<span class="math inline">\(\omega_n\)</span></p>
+<p>HSI的大小是<span class="math inline">\(h\times w\times b\)</span>，<span class="math inline">\(\omega _n\)</span>和<span class="math inline">\(\omega _l\)</span>可以表示为<span class="math inline">\(h\times w\times m\)</span>，将其简单的拼接在一起就得到了多元数据立方体</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420390016.png" /></p>
+<h3 id="混合亲和矩阵用于信息融合">混合亲和矩阵用于信息融合</h3>
+<p>提出了混合亲和矩阵来进行多源信息融合</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420402271.png" /></p>
+<p>上式是一个基本的计算方法，<span class="math inline">\(r_{ij}\)</span>表示的是对应像素的信息向量</p>
+<p>每一个像素都是一个<span class="math inline">\(n\times n\)</span>的混合亲和矩阵，<span class="math inline">\(n = b + 2m\)</span>，这个矩阵包含了像素级别信息：各个光谱波段间的关系，而且包含了亚像素信息：对应像素中各个端元的丰度之间的关系。</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420412161.png" /></p>
+<p>具体分为5部分，A表示两幅图中对应像素的特定波段之间的差异信息，就是各个波段之间用（8）式进行计算；B表示两幅图中对应像素中的特定端元间的线性丰度的差异信息，计算同（8）；E表示两幅图中对应像素中特定端元间的非线性丰度的差异信息；因为高光谱数据和端元丰度图之间没有关系，所以C为0。</p>
+<p>每一个混合矩阵被输入到2维CNN中，将CD看成是一个分类任务，即某一像素是否改变。那个这个混合亲和矩阵有什么意义呢？</p>
+<ol type="1">
+<li><p>是一种有效的方法来同时处理多源数据的融合，结合了高光谱数据和丰度图数据；</p></li>
+<li><p>一维的像素向量被映射到二维的矩阵中，能够提供丰富的跨通道梯度的信息，最大化多源信息的利用率；</p></li>
+<li><p>这个矩阵能和CNN无缝衔接，CNN能够有效的学习到用于CD检测的特征，而且能够整合矩阵中不同部分的信息</p></li>
+</ol>
+<h3 id="getnet">GETNET</h3>
+<p>不同于一般CNN网络的权值共享，GETNET采用的是<strong>局部权值共享</strong>，因为矩阵有两部分不同性质的信息，因此采用两个不同的卷积核，左上角和右下角。经过卷积核池化之后，学习到两种不同的高层次的特征，然后用全连接层融合两类特征，来提高模型的泛化能力，因为两类特征对不同的数据集比较敏感。如下图</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420433303.png" /></p>
+<p>这里的channels应该是每一层卷积核的个数，也就是输出的feature map的通道数</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420448387.png" /></p>
+<p>因为根据CVA的结果来看变化和未变化的比例是1：2，也就是说没有变化的像素更多，因此要多采用未变化的样本来训练网络，使网络能够区分更多的未变化样本。所以训练采用的是用CVA方法生成的带标签的伪数据集，正负样本比例是1:2</p>
+<h2 id="实验部分">实验部分</h2>
+<p>数据集：总共使用了四个数据集，三个现有的数据集，以及开源出了一个数据集</p>
+<p>实验结果：</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420498111.png" /></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570420511061.png" /></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570420572009.png" /></p>
+<h1 id="learning-to-measure-changes-fully-convolutional-siamese-metric-networks-for-scene-change-detectionn">Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detectionn</h1>
+<p>原文标题：Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detection</p>
+<p>论文链接：<a href="http://arxiv.org/abs/1810.09111" target="_blank" rel="noopener" class="uri">http://arxiv.org/abs/1810.09111</a></p>
+<h2 id="abstract-1">abstract</h2>
+<p>场景变化检测的困难之处由场景明暗变化，阴影以及相机视点不同而导致的噪声变化很难去衡量，因为噪声变化和语义的变化交织在一起。从最直观的角度出发，直接比较图中特征差异。使用对比损失降低未变化特征对的距离和增大变化特征对的距离，又提出了阈值对比损失来解决视点大幅度变化所造成的问题。</p>
+<p>源码：<a href="https://github.com/gmayday1997/ChangeDet" target="_blank" rel="noopener" class="uri">https://github.com/gmayday1997/ChangeDet</a></p>
+<h2 id="introduction-1">introduction</h2>
+<p>state-of-the-art 的方法基本都基于FCN，基于fcn的模型通过学习具有最好检测效果的决策边界来检测变化。为了区分语义边和噪声变化，一种可行的办法是提出一种指标可以衡量变化的差异，对语义变化产生较大的值，而对噪声变化产生较小的值。深度度量学习的核心思想是减少类内差异，而增大类间差异。论文主要包含两部分：一提取特征，二用预定义的距离函数求特征对的距离。</p>
+<p>主要贡献：一、提出第一个解决多种问题的框架结构；二、提出了阈值对比损失 Thresholded Contrastive Loss (TCL)来克服大幅度视点变化问题；三、达到了state-of-the-art；四、将距离度量整合进基于fcn的baseline。</p>
+<h2 id="related-work">related work</h2>
+<p>最传统的方法就是通过一个阈值直接找图像中有明显差异的像素，计算成本低，但区分性差。还有就是手工设计特征的方法，如 image rationing, change vector analysis, Markov random field, and dictionarylearning。state-of-the-art的方法基于FCN，都是在学习边界决策来CD。作者的想法是基于另一篇论文，这篇论文通过距离度量变化的，但区分力不够。Change detection based on deep siamese convolutional network for optical aerialimages 这篇论文和本论文很相似，但作者提出的是一个end-to-end的方法来解决多种问题。</p>
+<h2 id="proposed-approach">proposed approach</h2>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427409859.png" /></p>
+<p>基本框架如上，通过全卷积孪生网络来提取特征对，然后用欧式距离或余弦相似性作为距离度量，作者将特征对提取以及度量距离这一个统一的过程称为隐式度量。使用对比损失来优化使changed pair有较大的距离值，Unchanged pair有较小的距离值，使用阈值对比损失解决大幅度视点变化问题。</p>
+<p>将变化看成是一种不相似性，用一种不相似性函数来度量。这个函数包括两部分：特征描述符 和 距离度量。特征描述符其实就是经过孪生网络得到的特征对，网络的backbone可以使用Googlenet或者DeepLab都可以。距离度量是作者设计的阈值对比损失函数，并与欧式距离度量和余弦相似度度量做了实验比较。</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427471184.png" /></p>
+<p>上图是ContrastiveLoss利用了用欧式距离，<span class="math inline">\(y_i,j = 1\)</span>表示在这个位置没有变化，<span class="math inline">\(D(f_i, f_j)\)</span>表示 <span class="math inline">\(f_i\)</span>和 <span class="math inline">\(f_j\)</span>特征向量的欧式距离，<span class="math inline">\(m\)</span>为距离的最大值</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427496171.png" /></p>
+<p>上图CosLoss利用了余弦相似性，<span class="math inline">\(D_k\)</span>是余弦相似性，<span class="math inline">\(W_k\)</span> 和 <span class="math inline">\(b_k\)</span> 是可学习到的缩放和移动参数</p>
+<p>上面的损失函数存在效果不好以及收敛缓慢的缺点，作者认为存在着一对矛盾：一方面，由于大视角的变化导致激活了更多不相关的信息，那些没有变化的区域会被认为是有变化的，还有就是变化与未变化的信息交织在一起；另一方面，本来没有变化的区域由于视点差异而产生了变化，所以在优化的时候对应的距离就会随着训练而减小至0，有一个减小的趋势，而这种趋势确实会产生我们想要的结果。但关键问题在于，这种减小的趋势不可能使特征对的语义距离减小至0，因此作者提出了TCL损失</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427519630.png" /></p>
+<p>这个定义表明没有必要将距离最小化到0，给距离度量一个容差。为了证明这个损失的有效性，作者在CD2014上做了对比实验</p>
+<p>训练策略采用MultiLayer Side-Output (MLSO)的方法，这种方法基于两种观点：（1）在反向传播中梯度传递到中间层有可能消失，这会导致中间层的特征不具有区分能力；（2）上层特征的表示能力很依赖于中间层特征的区分能力。</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427545900.png" /></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427558338.png" /></p>
+<p>在图中所示的层中分别输出特征对，计算特征对距离，与ground truth求<span class="math inline">\(loss_h\)</span>，然后根据公式计算最终损失<span class="math inline">\(Loss\)</span>，<span class="math inline">\(\beta_h\)</span>是相应的权重。在预测阶段，对不同的层采用了不同的置信阈值，最终预测结果为各个层的输出取平均。</p>
+<h2 id="experimental-and-discuss">experimental and discuss</h2>
+<p>数据集：<a href="https://ghsi.github.io/proj/RSS2016.html" target="_blank" rel="noopener">VL-CMU-CD Dataset</a> <a href="http://www.vision.is.tohoku.ac.jp/us/research/4dcity%20modeling/pano%20cd%20dataset/" target="_blank" rel="noopener">PCD2015 Dataset</a> <a href="http://www.changedetection.net/" target="_blank" rel="noopener">CDnet Dataset</a> <a href="http://jacarini.dinf.usherbrooke.ca/results2014/516/" target="_blank" rel="noopener">Evaluation on CDnet</a></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427609068.png" /></p>
+<p>1.MLSO训练策略确实能够提升效果；2.欧式距离的表现比余弦相似度的效果更好</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427631018.png" /></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427647024.png" /></p>
+<p>在第三个数据集上的比较，作者的方法达到了具有竞争力的表现，但有一些指标存在不足。一方面是state-of-the-art的方法采用了语义分割的方法一定程度上改变了任务。我理解的是因为语义分割方法擅长区分前景和背景，语义分割只是分割出了我们所需要的前景目标，实际上网络可能并不知道在某块区域到底有没有变化，只是经过训练就能够分割出变化的目标，因此也就不受视角变化的影响了。另一方面，作者的方法实际是一个图像差值的方法，在精度方面与语义分割方法必然存在一定差距，语义分割本身就是一个像素级别的分类的问题。</p>
+<h2 id="discussion">discussion</h2>
+<p>讨论了三个问题：（1）是否提出的网络模型对于大视角变化具有鲁棒性？（2）模型表现是否对于阈值是敏感的？（3）利用对比损失来增强度量学习的方法是否真的能学习到更多具有区分能力的特征？</p>
+<p>对于第一个问题，小视角和大视角的变化。采用了TCL损失函数，<span class="math inline">\(thread = 0\)</span>就是对比损失，0.1时效果最好</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427704872.png" /></p>
+<p>对于第二个问题，上面已经可以知道模型易受阈值的影响，因此需要最大化前景变化和背景变化的对比，对不同的距离函数做了对比，采用RMS均方值对比，应该就是特征对求距离后的图像的均方值</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427782231.png" /></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570427791917.png" /></p>
+<p>结果表明欧式距离产生的图像具有较大的对比度，因此欧式距离更有能力区分背景变化；深层特征带有丰富的语义信息，从图中得出区分能力强的特征鲁棒性就更好</p>
+<p>对于第三个问题，作者将对比损度量学习的方法运用于FCN，采用交叉熵损失<span class="math inline">\(Loss_{class}\)</span>和对比损失<span class="math inline">\(Loss_{feat}\)</span>，结果表明有较小的提升</p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/1570427831773.png" /></p>
+<p><img src="https://space4img.oss-cn-beijing.aliyuncs.com/blog/clip_image001-1570427848090.png" /></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%8F%98%E5%8C%96%E6%A3%80%E6%B5%8B/" rel="tag"># 变化检测</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/12/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-Decoders-Matter-for-Semantic-Segmentation/" rel="prev" title="论文阅读|Decoders Matter for Semantic Segmentation:Data-Dependent Decoding Enables Flexible Feature Aggregation">
+      <i class="fa fa-chevron-left"></i> 论文阅读|Decoders Matter for Semantic Segmentation:Data-Dependent Decoding Enables Flexible Feature Aggregation
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/13/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB-YOLACT-Real-time-Instance-Segmentation/" rel="next" title="论文阅读|YOLACT:Real-time Instance Segmentation">
+      论文阅读|YOLACT:Real-time Instance Segmentation <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#getnet-e2e-2d-cnn-hyperspectral-image-cd"><span class="nav-number">1.</span> <span class="nav-text">GETNET e2e 2d CNN Hyperspectral image CD</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#abstract"><span class="nav-number">1.1.</span> <span class="nav-text">abstract</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#introduction"><span class="nav-number">1.2.</span> <span class="nav-text">introduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#relation-work"><span class="nav-number">1.3.</span> <span class="nav-text">relation work</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#methodology方法论"><span class="nav-number">1.4.</span> <span class="nav-text">methodology方法论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#混合光谱分解用于亚像素级别信息挖掘"><span class="nav-number">1.4.1.</span> <span class="nav-text">混合光谱分解用于亚像素级别信息挖掘</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#混合亲和矩阵用于信息融合"><span class="nav-number">1.4.2.</span> <span class="nav-text">混合亲和矩阵用于信息融合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getnet"><span class="nav-number">1.4.3.</span> <span class="nav-text">GETNET</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#实验部分"><span class="nav-number">1.5.</span> <span class="nav-text">实验部分</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#learning-to-measure-changes-fully-convolutional-siamese-metric-networks-for-scene-change-detectionn"><span class="nav-number">2.</span> <span class="nav-text">Learning to Measure Changes: Fully Convolutional Siamese Metric Networks for Scene Change Detectionn</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#abstract-1"><span class="nav-number">2.1.</span> <span class="nav-text">abstract</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#introduction-1"><span class="nav-number">2.2.</span> <span class="nav-text">introduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#related-work"><span class="nav-number">2.3.</span> <span class="nav-text">related work</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#proposed-approach"><span class="nav-number">2.4.</span> <span class="nav-text">proposed approach</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#experimental-and-discuss"><span class="nav-number">2.5.</span> <span class="nav-text">experimental and discuss</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#discussion"><span class="nav-number">2.6.</span> <span class="nav-text">discussion</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Quintin Liew"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Quintin Liew</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/QuintinLiu" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;QuintinLiu" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:carrot_lt@163.com" title="E-Mail → mailto:carrot_lt@163.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2019 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Quintin Liew</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">20k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">18 分钟</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.getAttribute('pjax') !== null) {
+      script.setAttribute('pjax', '');
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="pjax">
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'gnkkvoTatkxqOKQX05Lfv0Mg-gzGzoHsz',
+      appKey     : 'bbVfSU7xUAg0d4f0jxzTHEnR',
+      placeholder: "无需注册即可评论，支持Markdown(可手动预览)",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : true,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+    </div>
+</body>
+</html>
